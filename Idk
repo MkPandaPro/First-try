@@ -1,0 +1,166 @@
+-- Delta Executor GUI Hub with Tabs and Toggles
+
+-- Services
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "DeltaHubV3"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 350, 0, 300)
+frame.Position = UDim2.new(0, 50, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner", frame)
+frameCorner.CornerRadius = UDim.new(0, 10)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -40, 0, 40)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Delta Script Hub"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+-- Minimize Button
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.new(0, 30, 0, 30)
+minimize.Position = UDim2.new(1, -35, 0, 5)
+minimize.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+minimize.Text = "-"
+minimize.TextColor3 = Color3.new(1, 1, 1)
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 18
+minimize.Parent = frame
+
+local minCorner = Instance.new("UICorner", minimize)
+minCorner.CornerRadius = UDim.new(0, 6)
+
+-- Tabs
+local tabs = {"Visuals", "Combat", "Misc"}
+local tabButtons = {}
+local currentTab = nil
+
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -20, 0, 40)
+tabFrame.Position = UDim2.new(0, 10, 0, 50)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = frame
+
+for i, tabName in ipairs(tabs) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 100, 0, 30)
+    btn.Position = UDim2.new(0, (i - 1) * 110, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+    btn.Text = tabName
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Parent = tabFrame
+
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0, 6)
+
+    tabButtons[tabName] = btn
+end
+
+-- Content Frames
+local contentFrames = {}
+
+for _, tabName in ipairs(tabs) do
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -20, 1, -100)
+    content.Position = UDim2.new(0, 10, 0, 90)
+    content.BackgroundTransparency = 1
+    content.Visible = false
+    content.Parent = frame
+
+    contentFrames[tabName] = content
+end
+
+-- Function to switch tabs
+local function switchTab(tabName)
+    for name, content in pairs(contentFrames) do
+        content.Visible = (name == tabName)
+    end
+    currentTab = tabName
+end
+
+-- Connect tab buttons
+for tabName, btn in pairs(tabButtons) do
+    btn.MouseButton1Click:Connect(function()
+        switchTab(tabName)
+    end)
+end
+
+-- Initialize first tab
+switchTab(tabs[1])
+
+-- Feature Buttons
+local features = {
+    Visuals = {
+        {name = "ESP", url = "https://pastebin.com/raw/YOUR_ESP_SCRIPT"},
+        {name = "Chams", url = "https://pastebin.com/raw/YOUR_CHAMS_SCRIPT"},
+    },
+    Combat = {
+        {name = "Silent Aim", url = "https://pastebin.com/raw/YOUR_SILENTAIM_SCRIPT"},
+        {name = "Aimbot", url = "https://pastebin.com/raw/YOUR_AIMBOT_SCRIPT"},
+    },
+    Misc = {
+        {name = "Galaxy Gun", url = "https://pastebin.com/raw/YOUR_GALAXY_SCRIPT"},
+        {name = "Speed Boost", url = "https://pastebin.com/raw/YOUR_SPEED_SCRIPT"},
+    },
+}
+
+for tabName, featureList in pairs(features) do
+    local content = contentFrames[tabName]
+    for i, feature in ipairs(featureList) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 280, 0, 40)
+        btn.Position = UDim2.new(0, 10, 0, (i - 1) * 50)
+        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        btn.Text = feature.name .. " [OFF]"
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 16
+        btn.Parent = content
+
+        local btnCorner = Instance.new("UICorner", btn)
+        btnCorner.CornerRadius = UDim.new(0, 6)
+
+        local isEnabled = false
+
+        btn.MouseButton1Click:Connect(function()
+            isEnabled = not isEnabled
+            btn.Text = feature.name .. (isEnabled and " [ON]" or " [OFF]")
+            pcall(function()
+                local code = game:HttpGet(feature.url)
+                loadstring(code)()
+            end)
+        end)
+    end
+end
+
+-- Minimize functionality
+local minimized = false
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    for _, element in pairs(frame:GetChildren()) do
+        if element ~= title and element ~= minimize then
+            element.Visible = not minimized
+        end
+    end
+    frame.Size = minimized and UDim2.new(0, 350, 0, 50) or UDim2.new(0, 350, 0, 300)
+end)
